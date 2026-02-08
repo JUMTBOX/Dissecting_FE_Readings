@@ -218,6 +218,74 @@ function ChildComponent() {
 **💡`useImperativeHandle`**
 
 - `useImperativeHandle`을 이해하기 위해서는 먼저 `React.forwardRef`에 대해 알아야 한다.
+- 부모에게서 넘겨받은 `ref`를 원하는 대로 수정할 수 있는 훅이다.
+
+```jsx
+const input = forwardRef((props, ref) => {
+  // useImperativeHandle을 사용하면 ref의 동작을 추가로 정의할 수 있다. 
+  useImperativeHandle(
+      ref,
+      () => ({
+        alert: () => alert(props.value),  
+      }),
+  // useEffect의 deps와 같다
+  []);
+  
+  return <input ref={ref} {...props}/>
+});
+
+function App() {
+  // input에 사용할 ref
+  const inputRef = useRef();
+  // input의 value
+  const [text, setText] = useState("");
+  
+  const handleClick = () => {
+    // inputRef에 추가로 정의한 alert라는 동작을 사용할 수 있다.
+    inputRef.current.alert();
+  }
+  
+  const handleChange = (e) => {
+    setText(cur => e.target.value);
+  }
+  
+  return (
+      <>
+        <Input ref={inputRef} value={text} onChange={handleChange}/>
+        <button onClick={handleClick}>Focus</button>
+      </>
+  )
+}
+```
+- 여기서는 전달 받은 `ref`에다 `useImperative`훅을 이용해 추가적인 동작을 정의했다. 이로써 부모는 단순히 `HTMLElement`뿐만 아니라 자식 컴포넌트에서 새롭게 설정한 객체의 키와 값에 대해서도 접근할 수 있게 되었다.
+- `useImperative`훅을 이용하면 이 `ref`값에 원하는 값이나 액션을 정의할 수 있다.
+
+**💡`useLayoutEffect`**
+- `이 함수의 시그니처는 useEffect와 동일하나, 모든 DOM의 변경 후에 동기적으로 발생한다.`
+- 여기서 중요한 사실은 `모든 DOM의 변경 후에 useLayoutEffect의 콜백 함수 실행이 동기적으로 발생`한다는 점이다.
+- 여기서 말하는 `DOM 변경`이란 렌더링이지, 실제로 브라우저에 해당 변경 사항이 반영되는 시점을 의미하는 것이 아니다.
+- 즉, 실행 순서는 다음과 같다.
+
+1. React가 DOM을 업데이트
+2. useLayoutEffect를 실행
+3. 브라우저에 변경 사항을 반영
+4. useEffect를 실행
+
+- `동기적으로 발생한다는 것은 리액트는 useLayoutEffect의 실행이 종료될 때까지 기다린 다음에 화면을 그린다는 의미이다.`
+- useLayoutEffect의 특징상 `DOM은 계산되었지만 이것이 화면에 반영되기 전에 하고 싶은 작업이 있을 때` <br/>
+  (Ex. DOM요소를 기반으로 한 애니메이션, 스크롤 위치 제어)
+
+**💡`useDebugValue`**
+- 디버깅하고 싶은 정보를 이 훅에다 사용하면 리액트 개발자 도구에서 볼 수 있다.
+
+**💡`훅의 규칙`**
+1. 최상위에서만 훅을 호출해야 한다. 반복문이나 조건문, 중첩된 함수 내에서 훅을 실행할 수 없다. <br/>
+   이 순서를 따라야만 컴포넌트가 렌더링될 때마다 항상 동일한 순서로 훅이 호출되는 것을 보장할 수 있다.
+2. 훅을 호출할 수 있는 것은 `리액트 함수 컴포넌트, 혹은 사용자 정의 훅`의 두 가지 경우 뿐이다. 일반 자바스크립트 함수에서는 훅을 사용할 수 없다.
+
+- `useState`의 구현에서 본 것처럼 훅에 대한 정보 저장은 리액트 어딘가에 있는 index와 같은 키를 기반으로 구현되어 있다. <br/>
+  (실제로는 객체 기반 연결리스트에 더 가깝다.)
+- `즉, useState나 useEffect는 모두 순서에 아주 큰 영향을 받는다.`
 
 ## 더 알아보기
 
